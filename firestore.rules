@@ -1,0 +1,94 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitive Definition
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // 1. User Rules
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'role', 'createdAt']) &&
+             data.uid == request.auth.uid &&
+             data.role in ['farmer', 'trader'] &&
+             data.createdAt == request.time &&
+             (data.get('displayName', '') is string && data.get('displayName', '').size() <= 100) &&
+             (data.get('region', '') is string && data.get('region', '').size() <= 100) &&
+             (data.get('phoneNumber', '') is string && data.get('phoneNumber', '').size() <= 20);
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if false; // Users shouldn't be listable by everyone
+      allow create: if isSignedIn() && isValidId(userId) && isValidUser(incoming());
+      allow update: if isSignedIn() && isOwner(userId) && (
+        // Action: Update Profile
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'region', 'phoneNumber']) &&
+        incoming().displayName is string && incoming().displayName.size() <= 100 &&
+        incoming().region is string && incoming().region.size() <= 100 &&
+        incoming().phoneNumber is string && incoming().phoneNumber.size() <= 20
+      );
+    }
+
+    // 2. Crop Rules (Admin only write)
+    match /crops/{cropId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // 3. Market Rules (Admin only write)
+    match /markets/{marketId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // 4. Price Report Rules
+    function isValidPriceReport(data) {
+      return data.keys().hasAll(['cropId', 'marketId', 'price', 'reportedBy', 'timestamp']) &&
+             data.reportedBy == request.auth.uid &&
+             data.price is number && data.price > 0 &&
+             data.timestamp == request.time &&
+             data.cropId is string && data.cropId.size() <= 128 &&
+             data.marketId is string && data.marketId.size() <= 128 &&
+             (data.get('unit', '') is string && data.get('unit', '').size() <= 50) &&
+             (data.get('reporterName', '') is string && data.get('reporterName', '').size() <= 100);
+    }
+
+    match /priceReports/{reportId} {
+      allow read: if true;
+      allow list: if true; // Publicly queryable prices
+      allow create: if isSignedIn() && isValidId(reportId) && isValidPriceReport(incoming()) &&
+                    exists(/databases/$(database)/documents/crops/$(incoming().cropId)) &&
+                    exists(/databases/$(database)/documents/markets/$(incoming().marketId));
+      allow update: if false; // Reports are immutable for integrity
+      allow delete: if false;
+    }
+
+    // 5. Advice Rules (Admin only write)
+    match /advice/{adviceId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

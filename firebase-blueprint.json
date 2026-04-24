@@ -1,0 +1,94 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Farmer or Trader profile data",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["farmer", "trader", "admin"] },
+        "region": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "points": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "role"]
+    },
+    "PriceReport": {
+      "title": "Price Report",
+      "description": "Crowdsourced crop price report from a specific market",
+      "type": "object",
+      "properties": {
+        "cropId": { "type": "string" },
+        "marketId": { "type": "string" },
+        "price": { "type": "number" },
+        "unit": { "type": "string" },
+        "reportedBy": { "type": "string" },
+        "reporterName": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "isVerified": { "type": "boolean" },
+        "voiceNoteUrl": { "type": "string" }
+      },
+      "required": ["cropId", "marketId", "price", "reportedBy", "timestamp"]
+    },
+    "Crop": {
+      "title": "Crop Type",
+      "description": "Definition of a crop category (e.g., Tomato, Coffee)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nameAr": { "type": "string" },
+        "icon": { "type": "string" },
+        "category": { "type": "string" }
+      },
+      "required": ["id", "nameAr"]
+    },
+    "Market": {
+      "title": "Market Location",
+      "description": "A physical market location",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nameAr": { "type": "string" },
+        "region": { "type": "string" }
+      },
+      "required": ["id", "nameAr"]
+    },
+    "Advice": {
+      "title": "Agricultural Advice",
+      "description": "Tips and weather-based guidance",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "type": { "type": "string", "enum": ["weather", "pest", "general"] },
+        "targetRegion": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "type"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Stored user profiles"
+    },
+    "crops/{cropId}": {
+      "schema": "Crop",
+      "description": "List of supported crops"
+    },
+    "markets/{marketId}": {
+      "schema": "Market",
+      "description": "List of key markets"
+    },
+    "priceReports/{reportId}": {
+      "schema": "PriceReport",
+      "description": "The stream of price updates"
+    },
+    "advice/{adviceId}": {
+      "schema": "Advice",
+      "description": "Agricultural tips"
+    }
+  }
+}

@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-base: #FDFCF8;
+  --color-primary: #3A5A40;
+  --color-secondary: #588157;
+  --color-accent: #FEFAE0;
+  --color-accent-dark: #E9EDC9;
+  --color-border: #E5E2D9;
+  --color-border-light: #F1F0EC;
+  --color-text: #1A1F1C;
+  --color-muted: #A3A199;
+  --color-alert: #A44A3F;
+}
+
+@layer base {
+  body {
+    @apply bg-base text-text antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* RTL Support for Arabic */
+[dir="rtl"] {
+  @apply font-sans;
+}
+
+.shadow-soft {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+.market-table th {
+  @apply p-3 text-right text-xs font-medium text-muted uppercase tracking-wider bg-[#F8F7F2] border-b border-border;
+}
+
+.market-table td {
+  @apply p-4 border-b border-border-light;
+}

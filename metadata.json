@@ -1,0 +1,13 @@
+{
+  "name": "سوقي - سوق المزارع الذكي",
+  "description": "منصة يمنية لتمكين المزارعين من معرفة أسعار المحاصيل لحظياً وتلقي الإرشادات الزراعية الذكية.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "AI-powered price tracking",
+    "Voice commands in Yemeni dialect",
+    "Crowdsourced market data",
+    "Weather-based agricultural advice"
+  ]
+}
