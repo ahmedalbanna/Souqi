@@ -36,8 +36,11 @@ import {
   MapPin,
   Clock,
   ChevronRight,
-  LogOut
+  LogOut,
+  Bell,
+  Users
 } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -124,8 +127,8 @@ function BottomNav() {
   const navItems = [
     { path: '/', label: 'السوق', icon: LayoutDashboard },
     { path: '/report', label: 'إبلاغ', icon: Mic },
-    { path: '/crops', label: 'المحاصيل', icon: ShoppingBag },
-    { path: '/advice', label: 'إرشاد', icon: CloudRain },
+    { path: '/forum', label: 'المجتمع', icon: Users },
+    { path: '/alerts', label: 'تنبيهات', icon: Bell },
   ];
 
   return (
@@ -178,6 +181,22 @@ function BottomNav() {
 
 function Dashboard() {
   const { priceReports } = useApp();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('All');
+
+  const filteredReports = priceReports.filter(r => {
+    const matchesSearch = r.cropNameAr.includes(searchTerm) || r.marketNameAr.includes(searchTerm);
+    const matchesRegion = selectedRegion === 'All' || r.region === selectedRegion || (!r.region && selectedRegion === 'All');
+    return matchesSearch && matchesRegion;
+  });
+
+  const mockChartData = [
+    { name: 'السبت', price: 3200 },
+    { name: 'الأحد', price: 3400 },
+    { name: 'الإثنين', price: 3300 },
+    { name: 'الثلاثاء', price: 3800 },
+    { name: 'الأربعاء', price: 4000 },
+  ];
 
   return (
     <div className="space-y-6">
@@ -193,24 +212,56 @@ function Dashboard() {
           <div className="text-lg font-bold text-alert mt-1">الرمان (صعدة)</div>
           <div className="text-xs font-mono text-muted">+15% في سوق عدن</div>
         </div>
-        <div className="bg-white border border-border p-4 rounded-xl flex flex-col justify-between shadow-sm">
-          <span className="text-[10px] text-muted uppercase tracking-widest">الموثوقية الإجمالية</span>
-          <div className="text-xl font-bold text-secondary mt-1 tracking-tighter">94.2%</div>
-          <div className="w-full bg-border-light h-1 rounded-full overflow-hidden mt-2">
-            <div className="bg-secondary h-full w-[94.2%] transition-all duration-1000"></div>
-          </div>
+      </div>
+
+      {/* Chart Section */}
+      <div className="bg-white border border-border rounded-xl p-4 shadow-sm">
+        <h3 className="text-xs font-bold text-muted uppercase tracking-widest mb-4">مؤشر أسعار الطماطم (صنعاء) آخر 5 أيام</h3>
+        <div className="h-40 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={mockChartData}>
+              <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} stroke="#A3A199" />
+              <Tooltip 
+                contentStyle={{ borderRadius: '8px', border: '1px solid #E5E2D9', fontSize: '12px' }} 
+                formatter={(value) => [`${value} ر.ي`, 'السعر']}
+              />
+              <Line type="monotone" dataKey="price" stroke="#3A5A40" strokeWidth={3} dot={{ r: 4, fill: '#3A5A40' }} />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
       <section className="space-y-4">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-md font-bold flex items-center gap-2">
-            <svg className="w-4 h-4 text-alert" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path></svg>
-            نبض سوق الجملة اللحظي
-          </h2>
-          <div className="flex gap-2 text-[10px]">
-            <span className="px-2 py-0.5 bg-primary/10 text-primary rounded-full font-bold">خضروات</span>
-            <span className="px-2 py-0.5 bg-accent-dark/50 text-text rounded-full font-bold">فواكه</span>
+        <div className="flex flex-col gap-3 px-1">
+          <div className="flex items-center justify-between">
+            <h2 className="text-md font-bold flex items-center gap-2">
+              <svg className="w-4 h-4 text-alert" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path></svg>
+              نبض سوق الجملة اللحظي
+            </h2>
+            <select 
+              value={selectedRegion}
+              onChange={(e) => setSelectedRegion(e.target.value)}
+              className="bg-base border border-border rounded-lg text-[10px] font-bold text-text px-2 py-1 focus:outline-none"
+            >
+              <option value="All">كل المناطق</option>
+              <option value="صنعاء">صنعاء</option>
+              <option value="عدن">عدن</option>
+              <option value="تعز">تعز</option>
+              <option value="الحديدة">الحديدة</option>
+            </select>
+          </div>
+          
+          <div className="relative">
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-muted" />
+            </div>
+            <input 
+              type="text"
+              placeholder="ابحث عن محصول أو سوق..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-base border border-border rounded-xl py-2 pr-10 pl-4 text-sm focus:outline-none focus:border-secondary transition-colors"
+            />
           </div>
         </div>
 
@@ -226,7 +277,7 @@ function Dashboard() {
               </thead>
               <tbody className="divide-y divide-border-light">
                 <AnimatePresence mode="popLayout" initial={false}>
-                  {priceReports.map((report) => (
+                  {filteredReports.map((report) => (
                     <motion.tr
                       key={report.id}
                       layout
@@ -495,6 +546,163 @@ function Advice() {
   );
 }
 
+function Forum() {
+  const { user } = useApp();
+  const [posts, setPosts] = useState<any[]>([]);
+  const [newPost, setNewPost] = useState('');
+
+  useEffect(() => {
+    setPosts([
+      { id: '1', authorName: 'أحمد سعيد', content: 'ما هو أفضل وقت لرش الطماطم ضد صانعة الأنفاق؟', time: 'قبل ساعتين', replies: 3 },
+      { id: '2', authorName: 'محمد الزراعي', content: 'سعر كيس اليوريا في صنعاء نزل اليوم إلى 22 ألف ريال.', time: 'قبل 5 ساعات', replies: 1 },
+    ]);
+  }, []);
+
+  const handlePost = async () => {
+    if (!newPost.trim() || !user) {
+      alert(user ? "الرجاء كتابة محتوى المنشور." : "الرجاء تسجيل الدخول أولاً.");
+      return;
+    }
+    try {
+      await addDoc(collection(db, 'forumPosts'), {
+        content: newPost,
+        authorId: user.uid,
+        authorName: user.displayName,
+        createdAt: serverTimestamp(),
+      });
+      setNewPost('');
+      alert("تم النشر بنجاح!");
+    } catch (e) {
+      handleFirestoreError(e, OperationType.CREATE, 'forumPosts');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black text-primary">المجتمع الزراعي</h2>
+      </div>
+
+      <div className="bg-white border border-border rounded-xl p-4 shadow-sm">
+        <textarea 
+          placeholder="اطرح سؤالك أو شارك معلومة زراعية..." 
+          className="w-full bg-base border border-border rounded-lg p-3 text-sm resize-none focus:outline-none focus:border-secondary" 
+          rows={3}
+          value={newPost}
+          onChange={(e) => setNewPost(e.target.value)}
+        />
+        <div className="flex justify-between items-center mt-3">
+          <button className="text-muted hover:text-primary transition-colors">
+            <Mic size={20} />
+          </button>
+          <button onClick={handlePost} className="bg-primary text-white text-xs font-bold px-5 py-2 rounded-lg hover:opacity-90 transition-opacity active:scale-95">
+            نشر
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {posts.map(post => (
+          <div key={post.id} className="bg-white border border-border rounded-xl p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center text-sm font-bold text-secondary">{post.authorName[0]}</div>
+              <div>
+                <p className="text-xs font-bold text-text">{post.authorName}</p>
+                <p className="text-[10px] text-muted">{post.time}</p>
+              </div>
+            </div>
+            <p className="text-sm text-text font-medium leading-relaxed">{post.content}</p>
+            <div className="mt-4 pt-3 border-t border-border-light flex justify-between items-center text-[10px] font-bold text-muted uppercase tracking-widest">
+               <span>{post.replies} ردود</span>
+               <button className="text-secondary hover:text-primary transition-colors">أضف رداً</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Alerts() {
+  const { user } = useApp();
+  const [crop, setCrop] = useState('طماطم');
+  const [market, setMarket] = useState('سوق صنعاء (عقيل)');
+  const [threshold, setThreshold] = useState('10');
+  
+  const handleAlertSetup = async () => {
+    if (!user) {
+      alert("الرجاء تسجيل الدخول أولاً.");
+      return;
+    }
+    try {
+      await addDoc(collection(db, 'priceAlerts'), {
+        userId: user.uid,
+        cropId: crop,
+        marketId: market,
+        thresholdPercent: parseInt(threshold),
+        createdAt: serverTimestamp()
+      });
+      alert("تم تفعيل التنبيه بنجاح. ستصلك رسالة عند تغير السعر.");
+    } catch (e) {
+      handleFirestoreError(e, OperationType.CREATE, 'priceAlerts');
+    }
+  };
+
+  return (
+    <div className="space-y-6 pt-4 text-center">
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent text-primary mb-2 shadow-sm border border-accent-dark">
+        <Bell size={32} />
+      </div>
+      <h2 className="text-2xl font-black text-primary tracking-tight">تنبيهات الأسعار</h2>
+      <p className="text-sm text-muted max-w-xs mx-auto">تلقَ إشعارات فورية عبر USSD أو WhatsApp عند تغير أسعار محاصيلك المفضلة.</p>
+      
+      <div className="bg-white border border-border rounded-2xl p-6 shadow-sm text-right mt-6">
+        <h3 className="font-bold text-primary mb-4 flex items-center gap-2">
+          <Clock size={16} /> تفعيل تنبيه جديد
+        </h3>
+        <div className="space-y-4">
+          <div>
+            <label className="text-[10px] font-bold text-muted block mb-1 uppercase tracking-tighter">المحصول</label>
+            <select 
+              value={crop} onChange={(e) => setCrop(e.target.value)}
+              className="w-full bg-base border border-border rounded-lg p-2.5 text-sm font-bold text-text focus:outline-none focus:border-secondary">
+              <option value="طماطم">طماطم</option>
+              <option value="بصل أحمر">بصل أحمر</option>
+              <option value="بن يافعي">بن يافعي</option>
+              <option value="رمان">رمان</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-muted block mb-1 uppercase tracking-tighter">السوق المركزي</label>
+            <select 
+              value={market} onChange={(e) => setMarket(e.target.value)}
+              className="w-full bg-base border border-border rounded-lg p-2.5 text-sm font-bold text-text focus:outline-none focus:border-secondary">
+              <option value="سوق صنعاء">سوق صنعاء (عقيل)</option>
+              <option value="سوق عدن">سوق عدن (المنصورة)</option>
+              <option value="سوق تعز">سوق تعز</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-muted block mb-1 uppercase tracking-tighter">نسبة التغير للتنبيه</label>
+            <select 
+              value={threshold} onChange={(e) => setThreshold(e.target.value)}
+              className="w-full bg-base border border-border rounded-lg p-2.5 text-sm font-bold text-text focus:outline-none focus:border-secondary">
+              <option value="10">أكثر من 10% (↑ أو ↓)</option>
+              <option value="20">أكثر من 20% (↑ أو ↓)</option>
+            </select>
+          </div>
+          <button 
+            onClick={handleAlertSetup}
+            className="w-full bg-primary text-white text-sm font-black py-3.5 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all shadow-md shadow-primary/20 mt-2"
+          >
+            تفعيل التنبيه الآن
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- Main App ---
 
 export default function App() {
@@ -536,7 +744,8 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/report" element={<Report />} />
-              <Route path="/crops" element={<div className="p-12 text-center text-muted italic font-medium bg-white border border-border border-dashed rounded-3xl">قريباً: قائمة المحاصيل الكاملة والبحث المتقدم</div>} />
+              <Route path="/forum" element={<Forum />} />
+              <Route path="/alerts" element={<Alerts />} />
               <Route path="/advice" element={<Advice />} />
             </Routes>
           </main>

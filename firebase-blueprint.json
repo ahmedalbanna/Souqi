@@ -67,6 +67,47 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "content", "type"]
+    },
+    "ForumPost": {
+      "title": "Forum Post",
+      "description": "Farmer Q&A post",
+      "type": "object",
+      "properties": {
+        "content": { "type": "string" },
+        "voiceNoteUrl": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "category": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["content", "authorId", "createdAt"]
+    },
+    "ForumReply": {
+      "title": "Forum Reply",
+      "description": "Reply to a Forum Post",
+      "type": "object",
+      "properties": {
+        "postId": { "type": "string" },
+        "content": { "type": "string" },
+        "voiceNoteUrl": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["postId", "content", "authorId", "createdAt"]
+    },
+    "PriceAlert": {
+      "title": "Price Alert Subscription",
+      "description": "User subscription for price changes",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "cropId": { "type": "string" },
+        "marketId": { "type": "string" },
+        "thresholdPercent": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "cropId", "marketId", "thresholdPercent", "createdAt"]
     }
   },
   "firestore": {
@@ -89,6 +130,18 @@
     "advice/{adviceId}": {
       "schema": "Advice",
       "description": "Agricultural tips"
+    },
+    "forumPosts/{postId}": {
+      "schema": "ForumPost",
+      "description": "Farmer questions"
+    },
+    "forumReplies/{replyId}": {
+      "schema": "ForumReply",
+      "description": "Answers to posts"
+    },
+    "priceAlerts/{alertId}": {
+      "schema": "PriceAlert",
+      "description": "User price alerts"
     }
   }
 }

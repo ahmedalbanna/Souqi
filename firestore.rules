@@ -90,5 +90,51 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false;
     }
+
+    // 6. Forum Posts
+    function isValidForumPost(data) {
+      return data.keys().hasAll(['content', 'authorId', 'createdAt']) &&
+             data.authorId == request.auth.uid &&
+             data.createdAt == request.time &&
+             data.content is string && data.content.size() <= 2000;
+    }
+
+    match /forumPosts/{postId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(postId) && isValidForumPost(incoming());
+      allow update, delete: if false;
+    }
+
+    // 7. Forum Replies
+    function isValidForumReply(data) {
+      return data.keys().hasAll(['postId', 'content', 'authorId', 'createdAt']) &&
+             data.authorId == request.auth.uid &&
+             data.createdAt == request.time &&
+             data.content is string && data.content.size() <= 2000 &&
+             exists(/databases/$(database)/documents/forumPosts/$(data.postId));
+    }
+
+    match /forumReplies/{replyId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(replyId) && isValidForumReply(incoming());
+      allow update, delete: if false;
+    }
+
+    // 8. Price Alerts
+    function isValidPriceAlert(data) {
+      return data.keys().hasAll(['userId', 'cropId', 'marketId', 'thresholdPercent', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.createdAt == request.time &&
+             data.thresholdPercent is number &&
+             exists(/databases/$(database)/documents/crops/$(data.cropId)) &&
+             exists(/databases/$(database)/documents/markets/$(data.marketId));
+    }
+
+    match /priceAlerts/{alertId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(alertId) && isValidPriceAlert(incoming());
+      allow update: if false;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
   }
 }
